@@ -1,52 +1,53 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Reloj • Zapopan</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8">
+  <title>iPad Wall Clock</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link rel="stylesheet" href="./styles.css">
 </head>
+
 <body>
-  <div id="bg" aria-hidden="true"></div>
+
+  <div id="bg"></div>
 
   <div class="wrap">
     <div class="panel">
-      <div class="topline">
-        <div class="city" id="city">Zapopan, Jalisco</div>
-        <div class="city" id="updated">—</div>
+
+      <div class="top">
+        <div id="city" class="city">Zapopan, Jalisco</div>
+        <div id="updated" class="updated">—</div>
       </div>
 
       <div class="clock">
-        <div class="time" id="time">--:--:--</div>
-        <div class="date" id="date">Cargando…</div>
+        <div id="time" class="time">--:--:--</div>
+        <div id="date" class="date">--/--/----</div>
       </div>
 
-      <div class="weatherRow">
+      <div class="weather">
+
         <div class="card">
-          <div class="smallTitle">Clima actual</div>
-          <div class="bigTemp" id="temp">--°C</div>
-          <div class="cond" id="cond">—</div>
-          <div class="badge" id="rainBadge" style="display:none;"></div>
-          <div class="badge" id="alertBadge" style="display:none;"></div>
+          <div class="label">Clima actual</div>
+          <div id="temp" class="temp">--°C</div>
+          <div id="cond" class="cond">—</div>
         </div>
 
         <div class="card">
-          <div class="smallTitle">Próximas horas</div>
-          <div class="hourly" id="hourly">
-            <!-- JS -->
-          </div>
-          <div class="footer">
-            <div id="source">Fuente: Open-Meteo</div>
-            <div id="status">—</div>
-          </div>
+          <div class="label">Próximas horas</div>
+          <div id="hourly" class="hourly">Cargando…</div>
         </div>
+
       </div>
+
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+
 </body>
 </html>

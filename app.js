@@ -6,29 +6,32 @@
 
   var C = window.DASH_CONFIG;
 
-  /* ================= CLOCK ================= */
+  /* ===== CLOCK ===== */
+
+  function pad(n) {
+    return n < 10 ? "0" + n : n;
+  }
 
   function startClock() {
     function tick() {
-      var now = new Date();
+      var d = new Date();
 
-      el("time").innerHTML = now.toLocaleTimeString("es-MX", {
-        hour12: false
-      });
+      el("time").innerHTML =
+        pad(d.getHours()) + ":" +
+        pad(d.getMinutes()) + ":" +
+        pad(d.getSeconds());
 
-      el("date").innerHTML = now.toLocaleDateString("es-MX", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-      });
+      el("date").innerHTML =
+        pad(d.getDate()) + "/" +
+        pad(d.getMonth() + 1) + "/" +
+        d.getFullYear();
     }
 
     tick();
     setInterval(tick, 1000);
   }
 
-  /* ================= BACKGROUND ================= */
+  /* ===== BACKGROUND ===== */
 
   function startBackgrounds() {
     var bg = el("bg");
@@ -43,119 +46,107 @@
     setInterval(change, C.backgroundRotateMs);
   }
 
-  /* ================= WEATHER ================= */
+  /* ===== XHR ===== */
 
   function xhrGet(url, cb) {
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4 && xhr.status === 200) {
-        cb(JSON.parse(xhr.responseText));
+        try {
+          cb(JSON.parse(xhr.responseText));
+        } catch (e) {
+          cb(null);
+        }
       }
     };
     xhr.send();
   }
 
- function loadWeather() {
+  /* ===== WEATHER ===== */
 
-  el("temp").innerHTML = "--°C";
-  el("cond").innerHTML = "Cargando clima…";
-  el("hourly").innerHTML = "Cargando…";
+  function loadWeather() {
 
-  // Mensaje visible de estado
-  el("updated").innerHTML = "Solicitando datos…";
+    el("temp").innerHTML = "--°C";
+    el("cond").innerHTML = "Cargando clima…";
+    el("hourly").innerHTML = "Cargando…";
+    el("updated").innerHTML = "Actualizando…";
 
-  xhrGet(
-    "https://geocoding-api.open-meteo.com/v1/search?name=Zapopan&count=1",
-    function (geo) {
+    xhrGet(
+      "https://geocoding-api.open-meteo.com/v1/search?name=Zapopan&count=1",
+      function (geo) {
 
-      if (!geo || !geo.results || !geo.results.length) {
-        el("cond").innerHTML = "Sin geo datos";
-        el("updated").innerHTML = "Error geo";
-        return;
-      }
-
-      var loc = geo.results[0];
-      el("city").innerHTML = loc.name + ", " + loc.admin1;
-      el("updated").innerHTML = "Geo OK";
-
-      // Construye URL de forecast
-      var url =
-        "https://api.open-meteo.com/v1/forecast" +
-        "?latitude=" + loc.latitude +
-        "&longitude=" + loc.longitude +
-        "&current_weather=true" +
-        "&hourly=temperature_2m,precipitation_probability";
-
-      el("updated").innerHTML = "Clima en ruta…";
-
-      xhrGet(url, function (data) {
-
-        if (!data || !data.current_weather) {
-          el("cond").innerHTML = "Sin clima";
-          el("updated").innerHTML = "Clima falló";
+        if (!geo || !geo.results || !geo.results.length) {
+          el("cond").innerHTML = "Sin datos";
           return;
         }
 
-        el("temp").innerHTML =
-          Math.round(data.current_weather.temperature) + "°C";
+        var loc = geo.results[0];
+        el("city").innerHTML = loc.name + ", " + loc.admin1;
 
-        el("cond").innerHTML =
-          "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
-        /* ===== Badge de lluvia ===== */
+        var url =
+          "https://api.open-meteo.com/v1/forecast" +
+          "?latitude=" + loc.latitude +
+          "&longitude=" + loc.longitude +
+          "&current_weather=true" +
+          "&hourly=temperature_2m,precipitation_probability" +
+          "&timezone=America/Mexico_City";
 
-            var rain = data.hourly.precipitation_probability;
-            var rainMax = 0;
+        xhrGet(url, function (data) {
 
-            for (var i = 0; i < 6; i++) {
-            if (rain[i] > rainMax) {
-                rainMax = rain[i];
-            }
-            }
+          if (!data || !data.current_weather || !data.hourly) {
+            el("cond").innerHTML = "Sin clima";
+            return;
+          }
 
-            if (rainMax >= 70) {
-            el("cond").innerHTML += " · 🌧️ Alta probabilidad de lluvia";
-            } else if (rainMax >= 40) {
+          /* Actual */
+          el("temp").innerHTML =
+            Math.round(data.current_weather.temperature) + "°C";
+
+          el("cond").innerHTML =
+            "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
+
+          /* Badge lluvia */
+          var rain = data.hourly.precipitation_probability;
+          var rainMax = 0;
+
+          for (var i = 0; i < 6; i++) {
+            if (rain[i] > rainMax) rainMax = rain[i];
+          }
+
+          if (rainMax >= 70) {
+            el("cond").innerHTML += " · 🌧️ Alta prob. lluvia";
+          } else if (rainMax >= 40) {
             el("cond").innerHTML += " · ☁️ Posible lluvia";
-            } else {
-            el("cond").innerHTML += " · ☀️ Sin lluvia próxima";
-            }
-        el("updated").innerHTML = "Datos OK";
+          } else {
+            el("cond").innerHTML += " · ☀️ Sin lluvia";
+          }
 
-        var html = "";
-        var times = data.hourly.time;
-        var temps = data.hourly.temperature_2m;
-        var rain = data.hourly.precipitation_probability;
+          /* Próximas horas */
+          var html = "";
+          var times = data.hourly.time;
+          var temps = data.hourly.temperature_2m;
 
-        var max = Math.min(6, times.length);
+          for (var j = 0; j < 6; j++) {
+            html +=
+              times[j].substr(11, 5) + " · " +
+              Math.round(temps[j]) + "°C · " +
+              rain[j] + "%<br>";
+          }
 
-        for (var i = 0; i < max; i++) {
-          var timeStr = times[i].substr(11, 5);
-          html += "<div>" +
-            timeStr + " · " +
-            Math.round(temps[i]) + "°C · " +
-            (rain[i] != null ? rain[i] + "%" : "—") +
-            "</div>";
-        }
+          el("hourly").innerHTML = html;
+          el("updated").innerHTML = "Datos OK";
+        });
+      }
+    );
+  }
 
-        el("hourly").innerHTML = html;
-
-      });
-
-    }
-  );
-
-}
-
-
-  /* ================= MAIN ================= */
+  /* ===== MAIN ===== */
 
   function main() {
     startClock();
     startBackgrounds();
-
-    // Delay prevents race condition on iOS 12
-    setTimeout(loadWeather, 1200);
+    setTimeout(loadWeather, 2000);
     setInterval(loadWeather, C.weatherRefreshMs);
   }
 
