@@ -56,75 +56,79 @@
     xhr.send();
   }
 
-  function loadWeather() {
+ function loadWeather() {
 
   el("temp").innerHTML = "--°C";
   el("cond").innerHTML = "Cargando clima…";
   el("hourly").innerHTML = "Cargando…";
+
+  // Mensaje visible de estado
+  el("updated").innerHTML = "Solicitando datos…";
 
   xhrGet(
     "https://geocoding-api.open-meteo.com/v1/search?name=Zapopan&count=1",
     function (geo) {
 
       if (!geo || !geo.results || !geo.results.length) {
-        el("cond").innerHTML = "Sin datos (geo)";
+        el("cond").innerHTML = "Sin geo datos";
+        el("updated").innerHTML = "Error geo";
         return;
       }
 
       var loc = geo.results[0];
       el("city").innerHTML = loc.name + ", " + loc.admin1;
+      el("updated").innerHTML = "Geo OK";
 
+      // Construye URL de forecast
       var url =
         "https://api.open-meteo.com/v1/forecast" +
         "?latitude=" + loc.latitude +
         "&longitude=" + loc.longitude +
         "&current_weather=true" +
-        "&hourly=temperature_2m,precipitation_probability" +
-        "&timezone=America/Mexico_City";
+        "&hourly=temperature_2m,precipitation_probability";
+
+      el("updated").innerHTML = "Clima en ruta…";
 
       xhrGet(url, function (data) {
 
-        if (!data || !data.current_weather || !data.hourly) {
-          el("cond").innerHTML = "Sin datos clima";
+        if (!data || !data.current_weather) {
+          el("cond").innerHTML = "Sin clima";
+          el("updated").innerHTML = "Clima falló";
           return;
         }
-
-        /* ===== Clima actual ===== */
 
         el("temp").innerHTML =
           Math.round(data.current_weather.temperature) + "°C";
 
         el("cond").innerHTML =
           "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
-
-        /* ===== Próximas horas (SIMPLE & SAFE) ===== */
+        el("updated").innerHTML = "Datos OK";
 
         var html = "";
-        var max = 6; // mostrar solo 6 horas (performance)
         var times = data.hourly.time;
         var temps = data.hourly.temperature_2m;
         var rain = data.hourly.precipitation_probability;
 
+        var max = Math.min(6, times.length);
+
         for (var i = 0; i < max; i++) {
-
-          if (!times[i]) continue;
-
-          // Extraer HH:MM sin Date parsing
-          var hour = times[i].substr(11, 5);
-
-          html +=
-            "<div>" +
-            hour + " · " +
+          var timeStr = times[i].substr(11, 5);
+          html += "<div>" +
+            timeStr + " · " +
             Math.round(temps[i]) + "°C · " +
-            rain[i] + "% lluvia" +
+            (rain[i] != null ? rain[i] + "%" : "—") +
             "</div>";
         }
 
         el("hourly").innerHTML = html;
+
       });
+
     }
   );
+
 }
+
 
   /* ================= MAIN ================= */
 
