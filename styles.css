@@ -168,10 +168,54 @@ html, body {
 }
 
 /* sutil drift anti-burn-in */
-.panel{
-  animation: drift 90s ease-in-out infinite alternate;
+.panel {
+  width: 92%;
+  max-width: 900px;
+  padding: 34px;
+  border-radius: 28px;
+
+  /* Fake glass */
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.10),
+      rgba(255,255,255,0.02)
+    ),
+    rgba(20,20,25,0.65);
+
+  border: 1px solid rgba(255,255,255,0.18);
+
+  box-shadow:
+    0 20px 40px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.12);
 }
+
 @keyframes drift{
   from{ transform: translate(0,0); }
   to{ transform: translate(10px, 6px); }
 }
+
+/* ===== Vertical mode (portrait) ===== */
+@media (orientation: portrait) {
+
+  .clock {
+    margin: 40px 0;
+  }
+
+  .time {
+    font-size: 110px;
+  }
+
+  .date {
+    font-size: 24px;
+  }
+
+  .weather {
+    flex-direction: column;
+  }
+
+  .temp {
+    font-size: 52px;
+  }
+}
+

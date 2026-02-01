@@ -102,6 +102,24 @@
 
         el("cond").innerHTML =
           "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
+        /* ===== Badge de lluvia ===== */
+
+            var rain = data.hourly.precipitation_probability;
+            var rainMax = 0;
+
+            for (var i = 0; i < 6; i++) {
+            if (rain[i] > rainMax) {
+                rainMax = rain[i];
+            }
+            }
+
+            if (rainMax >= 70) {
+            el("cond").innerHTML += " · 🌧️ Alta probabilidad de lluvia";
+            } else if (rainMax >= 40) {
+            el("cond").innerHTML += " · ☁️ Posible lluvia";
+            } else {
+            el("cond").innerHTML += " · ☀️ Sin lluvia próxima";
+            }
         el("updated").innerHTML = "Datos OK";
 
         var html = "";
