@@ -58,39 +58,73 @@
 
   function loadWeather() {
 
-    // 1️⃣ Geocode Zapopan
-    xhrGet(
-      "https://geocoding-api.open-meteo.com/v1/search?name=Zapopan&count=1&language=es",
-      function (geo) {
+  el("temp").innerHTML = "--°C";
+  el("cond").innerHTML = "Cargando clima…";
+  el("hourly").innerHTML = "Cargando…";
 
-        if (!geo.results || !geo.results.length) return;
+  xhrGet(
+    "https://geocoding-api.open-meteo.com/v1/search?name=Zapopan&count=1",
+    function (geo) {
 
-        var loc = geo.results[0];
-        el("city").innerHTML = loc.name + ", " + loc.admin1;
-
-        // 2️⃣ WEATHER (LEGACY, STABLE)
-        var url =
-          "https://api.open-meteo.com/v1/forecast" +
-          "?latitude=" + loc.latitude +
-          "&longitude=" + loc.longitude +
-          "&current_weather=true" +
-          "&timezone=America/Mexico_City";
-
-        xhrGet(url, function (data) {
-
-          if (!data.current_weather) return;
-
-          el("temp").innerHTML =
-            Math.round(data.current_weather.temperature) + "°C";
-
-          el("cond").innerHTML = "Viento " +
-            Math.round(data.current_weather.windspeed) + " km/h";
-
-          el("updated").innerHTML = "Actualizado";
-        });
+      if (!geo || !geo.results || !geo.results.length) {
+        el("cond").innerHTML = "Sin datos (geo)";
+        return;
       }
-    );
-  }
+
+      var loc = geo.results[0];
+      el("city").innerHTML = loc.name + ", " + loc.admin1;
+
+      var url =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=" + loc.latitude +
+        "&longitude=" + loc.longitude +
+        "&current_weather=true" +
+        "&hourly=temperature_2m,precipitation_probability" +
+        "&timezone=America/Mexico_City";
+
+      xhrGet(url, function (data) {
+
+        if (!data || !data.current_weather || !data.hourly) {
+          el("cond").innerHTML = "Sin datos clima";
+          return;
+        }
+
+        /* ===== Clima actual ===== */
+
+        el("temp").innerHTML =
+          Math.round(data.current_weather.temperature) + "°C";
+
+        el("cond").innerHTML =
+          "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
+
+        /* ===== Próximas horas (SIMPLE & SAFE) ===== */
+
+        var html = "";
+        var max = 6; // mostrar solo 6 horas (performance)
+        var times = data.hourly.time;
+        var temps = data.hourly.temperature_2m;
+        var rain = data.hourly.precipitation_probability;
+
+        for (var i = 0; i < max; i++) {
+
+          if (!times[i]) continue;
+
+          // Extraer HH:MM sin Date parsing
+          var hour = times[i].substr(11, 5);
+
+          html +=
+            "<div>" +
+            hour + " · " +
+            Math.round(temps[i]) + "°C · " +
+            rain[i] + "% lluvia" +
+            "</div>";
+        }
+
+        el("hourly").innerHTML = html;
+      });
+    }
+  );
+}
 
   /* ================= MAIN ================= */
 
