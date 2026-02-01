@@ -58,6 +58,7 @@
 
   function loadWeather() {
 
+    // 1️⃣ Geocode Zapopan
     xhrGet(
       "https://geocoding-api.open-meteo.com/v1/search?name=Zapopan&count=1&language=es",
       function (geo) {
@@ -67,19 +68,26 @@
         var loc = geo.results[0];
         el("city").innerHTML = loc.name + ", " + loc.admin1;
 
+        // 2️⃣ WEATHER (LEGACY, STABLE)
         var url =
           "https://api.open-meteo.com/v1/forecast" +
           "?latitude=" + loc.latitude +
           "&longitude=" + loc.longitude +
-          "&current=temperature_2m" +
+          "&current_weather=true" +
           "&timezone=America/Mexico_City";
 
         xhrGet(url, function (data) {
-          el("temp").innerHTML = Math.round(data.current.temperature_2m) + "°C";
-          el("cond").innerHTML = "Condiciones actuales";
+
+          if (!data.current_weather) return;
+
+          el("temp").innerHTML =
+            Math.round(data.current_weather.temperature) + "°C";
+
+          el("cond").innerHTML = "Viento " +
+            Math.round(data.current_weather.windspeed) + " km/h";
+
           el("updated").innerHTML = "Actualizado";
         });
-
       }
     );
   }
@@ -89,7 +97,9 @@
   function main() {
     startClock();
     startBackgrounds();
-    loadWeather();
+
+    // Delay prevents race condition on iOS 12
+    setTimeout(loadWeather, 1200);
     setInterval(loadWeather, C.weatherRefreshMs);
   }
 
