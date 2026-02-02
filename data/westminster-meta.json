@@ -1,0 +1,13 @@
+{
+  "title": "Catecismo menor Westminster",
+  "language": "es",
+  "cycle_days": 3,
+  "total_questions": 107,
+  "source": "Basado en el Catecismo Menor de Westminster (dominio público). Redacción en español con fines devocionales y educativos.",
+  "structure": "Pregunta y Respuesta",
+  "files": [
+    "westminster-01-36.json",
+    "westminster-37-86.json",
+    "westminster-87-107.json"
+  ]
+}

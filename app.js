@@ -21,10 +21,15 @@
         pad(d.getMinutes()) + ":" +
         pad(d.getSeconds());
 
+      var months = [
+        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+      ];
+
       el("date").innerHTML =
-        pad(d.getDate()) + "/" +
-        pad(d.getMonth() + 1) + "/" +
-        d.getFullYear();
+         d.getDate() + " de " +
+         months[d.getMonth()] + " de " +
+         d.getFullYear();
     }
 
     tick();
@@ -141,13 +146,63 @@
     );
   }
 
+  function loadCatechism() {
+
+  function xhrGetLocal(url, cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        try {
+          cb(JSON.parse(xhr.responseText));
+        } catch (e) {
+          cb(null);
+        }
+      }
+    };
+    xhr.send();
+  }
+
+  // Día del año simple (sin fechas complejas)
+  var now = new Date();
+  var start = new Date(now.getFullYear(), 0, 0);
+  var diff = now - start;
+  var dayOfYear = Math.floor(diff / 86400000);
+
+  // Ciclo cada 3 días
+  var index = Math.floor(dayOfYear / 3);
+
+  xhrGetLocal("data/westminster-meta.json", function (meta) {
+    if (!meta) return;
+
+    var fileIndex = index % meta.files.length;
+    var file = "data/" + meta.files[fileIndex];
+
+    xhrGetLocal(file, function (block) {
+      if (!block || !block.items || !block.items.length) return;
+
+      var itemIndex = index % block.items.length;
+      var item = block.items[itemIndex];
+
+      el("cate-q").innerHTML =
+        "Pregunta " + item.id + ": " + item.q;
+
+      el("cate-a").innerHTML =
+        "“" + item.a + "”";
+    });
+  });
+}
+
+
   /* ===== MAIN ===== */
 
   function main() {
     startClock();
     startBackgrounds();
     setTimeout(loadWeather, 2000);
+    loadCatechism();
     setInterval(loadWeather, C.weatherRefreshMs);
+    
   }
 
   document.addEventListener("DOMContentLoaded", function () {
