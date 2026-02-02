@@ -193,17 +193,30 @@
   });
 }
 
+    function applyNightMode() {
+    var h = new Date().getHours();
+
+        // Noche: 20:00 → 06:00
+        if (h >= 20 || h < 6) {
+            document.body.className = "night";
+        } else {
+            document.body.className = "";
+        }
+    }
+
+
 
   /* ===== MAIN ===== */
 
-  function main() {
-    startClock();
-    startBackgrounds();
-    setTimeout(loadWeather, 2000);
-    loadCatechism();
-    setInterval(loadWeather, C.weatherRefreshMs);
-    
-  }
+    function main() {
+        startClock();
+        startBackgrounds();
+        applyNightMode();
+        setInterval(applyNightMode, 60 * 1000);
+        setTimeout(loadWeather, 2000);
+        setInterval(loadWeather, C.weatherRefreshMs);
+        loadCatechism();
+    }
 
   document.addEventListener("DOMContentLoaded", function () {
     main();
