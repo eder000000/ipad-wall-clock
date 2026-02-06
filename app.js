@@ -127,12 +127,30 @@
             el("cond").innerHTML += " · ☀️ Sin lluvia";
           }
 
-          /* Próximas horas */
-          var html = "";
-          var times = data.hourly.time;
-          var temps = data.hourly.temperature_2m;
+          /* ===== Próximas horas dinámicas ===== */
 
-          for (var j = 0; j < 6; j++) {
+          var html = "";
+          var now = new Date();
+          var currentHour = now.getHours();
+          var startIndex = 0;
+
+          // Encontrar índice que coincide con la hora actual
+          for (var i = 0; i < times.length; i++) {
+
+            var hourStr = times[i].substr(11, 2);
+            var hourNum = parseInt(hourStr, 10);
+
+            if (hourNum === currentHour) {
+              startIndex = i + 1; // empieza desde la siguiente hora
+              break;
+            }
+          }
+
+          // Renderizar próximas 6 horas
+          for (var j = startIndex; j < startIndex + 6; j++) {
+
+            if (!times[j]) break;
+
             html +=
               times[j].substr(11, 5) + " · " +
               Math.round(temps[j]) + "°C · " +
