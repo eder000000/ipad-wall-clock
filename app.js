@@ -111,8 +111,12 @@
           el("cond").innerHTML =
             "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
 
-          /* Badge lluvia */
+                    /* Datos hourly */
+          var times = data.hourly.time;
+          var temps = data.hourly.temperature_2m;
           var rain = data.hourly.precipitation_probability;
+
+          /* Badge lluvia */
           var rainMax = 0;
 
           for (var i = 0; i < 6; i++) {
