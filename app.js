@@ -27,9 +27,9 @@
       ];
 
       el("date").innerHTML =
-         d.getDate() + " de " +
-         months[d.getMonth()] + " de " +
-         d.getFullYear();
+        d.getDate() + " de " +
+        months[d.getMonth()] + " de " +
+        d.getFullYear();
     }
 
     tick();
@@ -111,24 +111,14 @@
           el("cond").innerHTML =
             "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
 
-                    /* Datos hourly */
+          /* Datos hourly */
           var times = data.hourly.time;
           var temps = data.hourly.temperature_2m;
           var rain = data.hourly.precipitation_probability;
 
-          /* Badge lluvia */
-          var rainMax = 0;
-
-          for (var i = 0; i < 6; i++) {
-            if (rain[i] > rainMax) rainMax = rain[i];
-          }
-
-          if (rainMax >= 70) {
-            el("cond").innerHTML += " · 🌧️ Alta prob. lluvia";
-          } else if (rainMax >= 40) {
-            el("cond").innerHTML += " · ☁️ Posible lluvia";
-          } else {
-            el("cond").innerHTML += " · ☀️ Sin lluvia";
+          if (!times || !temps || !rain) {
+            el("hourly").innerHTML = "Sin datos horarios";
+            return;
           }
 
           /* ===== Próximas horas dinámicas PRO ===== */
@@ -139,41 +129,54 @@
 
           var startIndex = 0;
 
-          // Encontrar índice de hora actual
-          for (var i = 0; i < times.length; i++) {
+          for (var k = 0; k < times.length; k++) {
 
-            var hourStr = times[i].substr(11, 2);
+            var hourStr = times[k].substr(11, 2);
             var hourNum = parseInt(hourStr, 10);
 
             if (hourNum === currentHour) {
-              startIndex = i;
+              startIndex = k;
               break;
             }
           }
 
-          // Renderizar 6 horas
+          var rainMax = 0;
+
+          for (var r = 0; r < 6; r++) {
+            if (rain[startIndex + r] > rainMax) {
+              rainMax = rain[startIndex + r];
+            }
+          }
+
+          if (rainMax >= 70) {
+            el("cond").innerHTML += " · 🌧️ Alta prob. lluvia";
+          } else if (rainMax >= 40) {
+            el("cond").innerHTML += " · ☁️ Posible lluvia";
+          } else {
+            el("cond").innerHTML += " · ☀️ Sin lluvia";
+          }
+
           for (var j = 0; j < 6; j++) {
 
             var idx = startIndex + j;
             if (!times[idx]) break;
 
-            var hourLabel;
-            var hourNum = parseInt(times[idx].substr(11, 2), 10);
+            var hourNum2 =
+              parseInt(times[idx].substr(11, 2), 10);
 
-            // Etiqueta "Ahora"
-            if (j === 0) {
-              hourLabel = "Ahora";
-            } else {
-              hourLabel = times[idx].substr(11, 5);
-            }
+            var hourLabel =
+              (j === 0)
+                ? "Ahora"
+                : times[idx].substr(11, 5);
 
             var tempVal = Math.round(temps[idx]);
             var rainVal = rain[idx];
 
-            /* ===== Icono día / noche simple ===== */
-            var icon = (hourNum >= 6 && hourNum < 18) ? "☀️" : "🌙";
+            var icon =
+              (hourNum2 >= 6 && hourNum2 < 18)
+                ? "☀️"
+                : "🌙";
 
-            /* ===== Highlight lluvia ===== */
             var rainBadge = "";
             var rowClass = "";
 
@@ -199,80 +202,80 @@
     );
   }
 
+  /* ===== CATECHISM ===== */
+
   function loadCatechism() {
 
-  function xhrGetLocal(url, cb) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        try {
-          cb(JSON.parse(xhr.responseText));
-        } catch (e) {
-          cb(null);
+    function xhrGetLocal(url, cb) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          try {
+            cb(JSON.parse(xhr.responseText));
+          } catch (e) {
+            cb(null);
+          }
         }
-      }
-    };
-    xhr.send();
-  }
-
-  // Día del año simple (sin fechas complejas)
-  var now = new Date();
-  var start = new Date(now.getFullYear(), 0, 0);
-  var diff = now - start;
-  var dayOfYear = Math.floor(diff / 86400000);
-
-  // Ciclo cada 3 días
-  var index = Math.floor(dayOfYear / 3);
-
-  xhrGetLocal("data/westminster-meta.json", function (meta) {
-    if (!meta) return;
-
-    var fileIndex = index % meta.files.length;
-    var file = "data/" + meta.files[fileIndex];
-
-    xhrGetLocal(file, function (block) {
-      if (!block || !block.items || !block.items.length) return;
-
-      var itemIndex = index % block.items.length;
-      var item = block.items[itemIndex];
-
-      el("cate-q").innerHTML =
-        "Pregunta " + item.id + ": " + item.q;
-
-      el("cate-a").innerHTML =
-        "“" + item.a + "”";
-    });
-  });
-}
-
-    function applyNightMode() {
-    var h = new Date().getHours();
-
-        // Noche: 20:00 → 06:00
-        if (h >= 20 || h < 6) {
-            document.body.className = "night";
-        } else {
-            document.body.className = "";
-        }
+      };
+      xhr.send();
     }
 
+    var now = new Date();
+    var start = new Date(now.getFullYear(), 0, 0);
+    var diff = now - start;
+    var dayOfYear = Math.floor(diff / 86400000);
 
+    var index = Math.floor(dayOfYear / 3);
+
+    xhrGetLocal("data/westminster-meta.json", function (meta) {
+      if (!meta) return;
+
+      var fileIndex = index % meta.files.length;
+      var file = "data/" + meta.files[fileIndex];
+
+      xhrGetLocal(file, function (block) {
+        if (!block || !block.items || !block.items.length) return;
+
+        var itemIndex = index % block.items.length;
+        var item = block.items[itemIndex];
+
+        el("cate-q").innerHTML =
+          "Pregunta " + item.id + ": " + item.q;
+
+        el("cate-a").innerHTML =
+          "“" + item.a + "”";
+      });
+    });
+  }
+
+  /* ===== NIGHT MODE ===== */
+
+  function applyNightMode() {
+    var h = new Date().getHours();
+
+    if (h >= 20 || h < 6) {
+      document.body.className = "night";
+    } else {
+      document.body.className = "";
+    }
+  }
 
   /* ===== MAIN ===== */
 
-    function main() {
-        startClock();
-        startBackgrounds();
-        applyNightMode();
-        setInterval(applyNightMode, 60 * 1000);
-        setTimeout(loadWeather, 2000);
-        setInterval(loadWeather, C.weatherRefreshMs);
-        loadCatechism();
-    }
+  function main() {
+    startClock();
+    startBackgrounds();
 
-  document.addEventListener("DOMContentLoaded", function () {
-    main();
-  });
+    applyNightMode();
+    setInterval(applyNightMode, 60000);
+
+    setTimeout(loadWeather, 2000);
+    setInterval(loadWeather, C.weatherRefreshMs);
+
+    loadCatechism();
+  }
+
+  document.addEventListener("DOMContentLoaded", main);
 
 })();
