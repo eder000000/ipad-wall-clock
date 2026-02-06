@@ -95,14 +95,16 @@
           "&longitude=" + loc.longitude +
           "&current_weather=true" +
           "&hourly=temperature_2m,precipitation_probability" +
+          "&current_weather=true" +
+          "&forecast_days=1" +
           "&timezone=America/Mexico_City";
 
         xhrGet(url, function (data) {
 
-          if (!data || !data.current_weather || !data.hourly) {
-            el("cond").innerHTML = "Sin clima";
-            return;
-          }
+         if (!data || !data.hourly) {
+        el("cond").innerHTML = "Sin clima";
+        return;
+        }
 
           /* Actual */
           el("temp").innerHTML =
