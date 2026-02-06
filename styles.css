@@ -192,3 +192,16 @@ body.night .cate-a {
   color: rgba(255,255,255,0.65);
 }
 
+/* ===== Hour rows ===== */
+
+.hour-row {
+  padding: 2px 0;
+  opacity: 0.9;
+}
+
+.hour-row.rain-high {
+  color: #9fd3ff;
+  font-weight: 600;
+}
+
+
