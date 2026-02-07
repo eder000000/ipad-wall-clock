@@ -77,131 +77,140 @@
     el("hourly").innerHTML = "Cargando…";
     el("updated").innerHTML = "Actualizando…";
 
-    xhrGet(
-      "https://geocoding-api.open-meteo.com/v1/search?name=Zapopan&count=1",
-      function (geo) {
+    /* Coordenadas fijas Zapopan */
+    var lat = 20.7214;
+    var lon = -103.3918;
 
-        if (!geo || !geo.results || !geo.results.length) {
-          el("cond").innerHTML = "Sin datos";
-          return;
-        }
+    el("city").innerHTML = "Zapopan, Jalisco";
 
-        var loc = geo.results[0];
-        el("city").innerHTML = loc.name + ", " + loc.admin1;
+    var url =
+      "https://api.open-meteo.com/v1/forecast" +
+      "?latitude=" + lat +
+      "&longitude=" + lon +
+      "&current_weather=true" +
+      "&hourly=temperature_2m,precipitation_probability,cloudcover" +
+      "&forecast_days=1" +
+      "&timezone=America/Mexico_City";
 
-        var url =
-          "https://api.open-meteo.com/v1/forecast" +
-          "?latitude=" + loc.latitude +
-          "&longitude=" + loc.longitude +
-          "&current_weather=true" +
-          "&hourly=temperature_2m,precipitation_probability" +
-          "&current_weather=true" +
-          "&forecast_days=1" +
-          "&timezone=America/Mexico_City";
+    xhrGet(url, function (data) {
 
-        xhrGet(url, function (data) {
-
-         if (!data || !data.hourly) {
+      if (!data || !data.hourly) {
         el("cond").innerHTML = "Sin clima";
         return;
+      }
+
+      /* Actual */
+      el("temp").innerHTML =
+        Math.round(data.current_weather.temperature) + "°C";
+
+      el("cond").innerHTML =
+        "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
+
+      /* Datos hourly */
+      var times = data.hourly.time;
+      var temps = data.hourly.temperature_2m;
+      var rain = data.hourly.precipitation_probability;
+      var clouds = data.hourly.cloudcover;
+
+      if (!times || !temps || !rain) {
+        el("hourly").innerHTML = "Sin datos horarios";
+        return;
+      }
+
+      /* ===== Próximas horas dinámicas ===== */
+
+      var html = "";
+      var now = new Date();
+      var currentHour = now.getHours();
+
+      var startIndex = 0;
+
+      for (var k = 0; k < times.length; k++) {
+
+        var hourStr = times[k].substr(11, 2);
+        var hourNum = parseInt(hourStr, 10);
+
+        if (hourNum === currentHour) {
+          startIndex = k;
+          break;
+        }
+      }
+
+      /* Badge lluvia general */
+      var rainMax = 0;
+
+      for (var r = 0; r < 6; r++) {
+        if (rain[startIndex + r] > rainMax) {
+          rainMax = rain[startIndex + r];
+        }
+      }
+
+      if (rainMax >= 70) {
+        el("cond").innerHTML += " · 🌧️ Alta prob. lluvia";
+      } else if (rainMax >= 40) {
+        el("cond").innerHTML += " · ☁️ Posible lluvia";
+      } else {
+        el("cond").innerHTML += " · ☀️ Sin lluvia";
+      }
+
+      /* Render horas */
+      for (var j = 0; j < 6; j++) {
+
+        var idx = startIndex + j;
+        if (!times[idx]) break;
+
+        var hourNum2 =
+          parseInt(times[idx].substr(11, 2), 10);
+
+        var hourLabel =
+          (j === 0)
+            ? "Ahora"
+            : times[idx].substr(11, 5);
+
+        var tempVal = Math.round(temps[idx]);
+        var rainVal = rain[idx];
+        var cloudVal = clouds[idx];
+
+        /* ===== Iconos por nubosidad ===== */
+
+        var isDay = (hourNum2 >= 6 && hourNum2 < 18);
+        var icon;
+
+        if (rainVal >= 60) {
+          icon = "🌧️";
+        }
+        else if (cloudVal <= 20) {
+          icon = isDay ? "☀️" : "🌙";
+        }
+        else if (cloudVal <= 60) {
+          icon = "⛅";
+        }
+        else {
+          icon = "☁️";
         }
 
-          /* Actual */
-          el("temp").innerHTML =
-            Math.round(data.current_weather.temperature) + "°C";
+        /* Highlight lluvia */
+        var rainBadge = "";
+        var rowClass = "";
 
-          el("cond").innerHTML =
-            "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
+        if (rainVal >= 50) {
+          rainBadge = " 🌧️";
+          rowClass = "rain-high";
+        }
 
-          /* Datos hourly */
-          var times = data.hourly.time;
-          var temps = data.hourly.temperature_2m;
-          var rain = data.hourly.precipitation_probability;
-
-          if (!times || !temps || !rain) {
-            el("hourly").innerHTML = "Sin datos horarios";
-            return;
-          }
-
-          /* ===== Próximas horas dinámicas PRO ===== */
-
-          var html = "";
-          var now = new Date();
-          var currentHour = now.getHours();
-
-          var startIndex = 0;
-
-          for (var k = 0; k < times.length; k++) {
-
-            var hourStr = times[k].substr(11, 2);
-            var hourNum = parseInt(hourStr, 10);
-
-            if (hourNum === currentHour) {
-              startIndex = k;
-              break;
-            }
-          }
-
-          var rainMax = 0;
-
-          for (var r = 0; r < 6; r++) {
-            if (rain[startIndex + r] > rainMax) {
-              rainMax = rain[startIndex + r];
-            }
-          }
-
-          if (rainMax >= 70) {
-            el("cond").innerHTML += " · 🌧️ Alta prob. lluvia";
-          } else if (rainMax >= 40) {
-            el("cond").innerHTML += " · ☁️ Posible lluvia";
-          } else {
-            el("cond").innerHTML += " · ☀️ Sin lluvia";
-          }
-
-          for (var j = 0; j < 6; j++) {
-
-            var idx = startIndex + j;
-            if (!times[idx]) break;
-
-            var hourNum2 =
-              parseInt(times[idx].substr(11, 2), 10);
-
-            var hourLabel =
-              (j === 0)
-                ? "Ahora"
-                : times[idx].substr(11, 5);
-
-            var tempVal = Math.round(temps[idx]);
-            var rainVal = rain[idx];
-
-            var icon =
-              (hourNum2 >= 6 && hourNum2 < 18)
-                ? "☀️"
-                : "🌙";
-
-            var rainBadge = "";
-            var rowClass = "";
-
-            if (rainVal >= 50) {
-              rainBadge = " 🌧️";
-              rowClass = "rain-high";
-            }
-
-            html +=
-              "<div class='hour-row " + rowClass + "'>" +
-              hourLabel + " · " +
-              tempVal + "°C · " +
-              icon + " " +
-              rainVal + "%" +
-              rainBadge +
-              "</div>";
-          }
-
-          el("hourly").innerHTML = html;
-          el("updated").innerHTML = "Datos OK";
-        });
+        html +=
+          "<div class='hour-row " + rowClass + "'>" +
+          hourLabel + " · " +
+          tempVal + "°C · " +
+          icon + " " +
+          rainVal + "%" +
+          rainBadge +
+          "</div>";
       }
-    );
+
+      el("hourly").innerHTML = html;
+      el("updated").innerHTML = "Datos OK";
+    });
   }
 
   /* ===== CATECHISM ===== */
