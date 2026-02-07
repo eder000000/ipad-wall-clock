@@ -44,11 +44,13 @@
 
     function change() {
       var i = Math.floor(Math.random() * list.length);
-      bg.style.backgroundImage = 'url("' + list[i] + '")';
+      bg.style.backgroundImage =
+        'url("' + list[i] + '")';
     }
 
     change();
-    setInterval(change, C.backgroundRotateMs);
+    setInterval(change,
+      C.backgroundRotateMs);
   }
 
   /* ===== XHR ===== */
@@ -57,9 +59,14 @@
     var xhr = new XMLHttpRequest();
     xhr.open("GET", url, true);
     xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        try { cb(JSON.parse(xhr.responseText)); }
-        catch (e) { cb(null); }
+      if (xhr.readyState === 4 &&
+          xhr.status === 200) {
+        try {
+          cb(JSON.parse(
+            xhr.responseText));
+        } catch (e) {
+          cb(null);
+        }
       }
     };
     xhr.send();
@@ -70,15 +77,18 @@
   function loadWeather() {
 
     el("temp").innerHTML = "--°C";
-    el("cond").innerHTML = "Cargando clima…";
-    el("hourly").innerHTML = "Cargando…";
-    el("updated").innerHTML = "Actualizando…";
+    el("cond").innerHTML =
+      "Cargando clima…";
+    el("hourly").innerHTML =
+      "Cargando…";
+    el("updated").innerHTML =
+      "Actualizando…";
 
-    /* Coordenadas fijas Zapopan */
     var lat = 20.7214;
     var lon = -103.3918;
 
-    el("city").innerHTML = "Zapopan, Jalisco";
+    el("city").innerHTML =
+      "Zapopan, Jalisco";
 
     var url =
       "https://api.open-meteo.com/v1/forecast" +
@@ -91,197 +101,176 @@
 
     xhrGet(url, function (data) {
 
-      if (!data || !data.hourly || !data.current_weather) {
-        el("cond").innerHTML = "Sin clima";
+      if (!data ||
+          !data.hourly ||
+          !data.current_weather) {
+        el("cond").innerHTML =
+          "Sin clima";
         return;
       }
 
-      /* Actual temperatura */
+      /* Temp actual */
       el("temp").innerHTML =
-        Math.round(data.current_weather.temperature) + "°C";
+        Math.round(
+          data.current_weather.temperature
+        ) + "°C";
 
       /* Arrays */
-      var times = data.hourly.time;
-      var temps = data.hourly.temperature_2m;
-      var rain = data.hourly.precipitation_probability;
-      var clouds = data.hourly.cloudcover;
+      var times =
+        data.hourly.time;
+      var temps =
+        data.hourly.temperature_2m;
+      var rain =
+        data.hourly.precipitation_probability;
+      var clouds =
+        data.hourly.cloudcover;
 
-      if (!times || !temps || !rain || !clouds) {
-        el("hourly").innerHTML = "Sin datos horarios";
-        return;
-      }
+      /* Hora actual */
+      var now =
+        new Date();
+      var currentHour =
+        now.getHours();
 
-      /* ===== Hora actual index ===== */
+      var idxNow = 0;
 
-      var now = new Date();
-      var currentHour = now.getHours();
-      var currentIndex = 0;
+      for (var i = 0;
+           i < times.length;
+           i++) {
 
-      for (var i = 0; i < times.length; i++) {
+        var h =
+          parseInt(
+            times[i].substr(11,2),
+            10
+          );
 
-        var hourNum =
-          parseInt(times[i].substr(11,2),10);
-
-        if (hourNum === currentHour) {
-          currentIndex = i;
+        if (h === currentHour) {
+          idxNow = i;
           break;
         }
       }
 
-      /* ===== Icono actual coherente ===== */
+      /* Icono coherente */
+      var rainNow =
+        rain[idxNow];
+      var cloudNow =
+        clouds[idxNow];
 
-      var cloudNow = clouds[currentIndex];
-      var rainNow = rain[currentIndex];
+      var isDay =
+        (currentHour >= 6 &&
+         currentHour < 18);
 
-      var isDayNow =
-        (currentHour >= 6 && currentHour < 18);
-
-      var iconNow;
+      var icon;
 
       if (rainNow >= 60) {
-        iconNow = "🌧️";
+        icon = "🌧️";
       }
       else if (cloudNow <= 20) {
-        iconNow = isDayNow ? "☀️" : "🌙";
+        icon = isDay
+          ? "☀️"
+          : "🌙";
       }
       else if (cloudNow <= 60) {
-        iconNow = "⛅";
+        icon = "⛅";
       }
       else {
-        iconNow = "☁️";
+        icon = "☁️";
       }
 
-      /* Viento + icono */
+      /* Render limpio */
       el("cond").innerHTML =
-        iconNow + " · Viento " +
-        Math.round(data.current_weather.windspeed) +
+        icon +
+        " · Viento " +
+        Math.round(
+          data.current_weather.windspeed
+        ) +
         " km/h";
 
       /* ===== Próximas horas ===== */
 
       var html = "";
-      var startIndex = currentIndex;
 
       for (var j = 0; j < 6; j++) {
 
-        var idx = startIndex + j;
+        var idx = idxNow + j;
         if (!times[idx]) break;
 
-        var hourNum2 =
-          parseInt(times[idx].substr(11,2),10);
+        var hourNum =
+          parseInt(
+            times[idx].substr(11,2),
+            10
+          );
 
-        var hourLabel =
+        var label =
           (j === 0)
             ? "Ahora"
             : times[idx].substr(11,5);
 
-        var tempVal = Math.round(temps[idx]);
-        var rainVal = rain[idx];
-        var cloudVal = clouds[idx];
+        var tempVal =
+          Math.round(temps[idx]);
+        var rainVal =
+          rain[idx];
+        var cloudVal =
+          clouds[idx];
 
-        var isDay =
-          (hourNum2 >= 6 && hourNum2 < 18);
+        var isDay2 =
+          (hourNum >= 6 &&
+           hourNum < 18);
 
-        var icon;
+        var icon2;
 
         if (rainVal >= 60) {
-          icon = "🌧️";
+          icon2 = "🌧️";
         }
         else if (cloudVal <= 20) {
-          icon = isDay ? "☀️" : "🌙";
+          icon2 =
+            isDay2
+            ? "☀️"
+            : "🌙";
         }
         else if (cloudVal <= 60) {
-          icon = "⛅";
+          icon2 = "⛅";
         }
         else {
-          icon = "☁️";
+          icon2 = "☁️";
         }
 
-        var rainBadge = "";
-        var rowClass = "";
-
-        if (rainVal >= 50) {
-          rainBadge = " 🌧️";
-          rowClass = "rain-high";
-        }
+        var rowClass =
+          (rainVal >= 50)
+            ? "rain-high"
+            : "";
 
         html +=
-          "<div class='hour-row "+rowClass+"'>" +
-          hourLabel + " · " +
-          tempVal + "°C · " +
-          icon + " " +
-          rainVal + "%" +
-          rainBadge +
+          "<div class='hour-row " +
+          rowClass +
+          "'>" +
+          label + " · " +
+          tempVal +
+          "°C · " +
+          icon2 +
+          " " +
+          rainVal +
+          "%" +
           "</div>";
       }
 
-      el("hourly").innerHTML = html;
-      el("updated").innerHTML = "Datos OK";
-    });
-  }
+      el("hourly").innerHTML =
+        html;
 
-  /* ===== CATECHISM ===== */
-
-  function loadCatechism() {
-
-    function xhrGetLocal(url, cb) {
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          try { cb(JSON.parse(xhr.responseText)); }
-          catch (e) { cb(null); }
-        }
-      };
-      xhr.send();
-    }
-
-    var now = new Date();
-    var start = new Date(now.getFullYear(),0,0);
-    var diff = now - start;
-    var dayOfYear = Math.floor(diff/86400000);
-    var index = Math.floor(dayOfYear/3);
-
-    xhrGetLocal("data/westminster-meta.json",
-      function (meta) {
-
-      if (!meta) return;
-
-      var fileIndex =
-        index % meta.files.length;
-
-      var file =
-        "data/" + meta.files[fileIndex];
-
-      xhrGetLocal(file,function(block){
-
-        if (!block || !block.items.length)
-          return;
-
-        var itemIndex =
-          index % block.items.length;
-
-        var item =
-          block.items[itemIndex];
-
-        el("cate-q").innerHTML =
-          "Pregunta "+item.id+": "+item.q;
-
-        el("cate-a").innerHTML =
-          "“"+item.a+"”";
-      });
+      el("updated").innerHTML =
+        "Datos OK";
     });
   }
 
   /* ===== NIGHT MODE ===== */
 
   function applyNightMode() {
-    var h = new Date().getHours();
+    var h =
+      new Date().getHours();
 
-    if (h >= 20 || h < 6)
-      document.body.className="night";
-    else
-      document.body.className="";
+    document.body.className =
+      (h >= 20 || h < 6)
+        ? "night"
+        : "";
   }
 
   /* ===== MAIN ===== */
@@ -292,13 +281,20 @@
     startBackgrounds();
 
     applyNightMode();
-    setInterval(applyNightMode,60000);
+    setInterval(
+      applyNightMode,
+      60000
+    );
 
-    setTimeout(loadWeather,2000);
-    setInterval(loadWeather,
-      C.weatherRefreshMs);
+    setTimeout(
+      loadWeather,
+      2000
+    );
 
-    loadCatechism();
+    setInterval(
+      loadWeather,
+      C.weatherRefreshMs
+    );
   }
 
   document.addEventListener(
