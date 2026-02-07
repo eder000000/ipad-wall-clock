@@ -84,8 +84,8 @@
     el("updated").innerHTML =
       "Actualizando…";
 
-    var lat = 20.7214;
-    var lon = -103.3918;
+    var lat = 20.6505244;
+    var lon = -103.4429582;
 
     el("city").innerHTML =
       "Zapopan, Jalisco";
