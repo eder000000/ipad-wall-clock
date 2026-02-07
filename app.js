@@ -125,12 +125,11 @@
       var clouds =
         data.hourly.cloudcover;
 
-      /* Hora actual */
+      /* Hora actual index */
       var now =
         new Date();
       var currentHour =
         now.getHours();
-
       var idxNow = 0;
 
       for (var i = 0;
@@ -149,7 +148,7 @@
         }
       }
 
-      /* Icono coherente */
+      /* Icono actual */
       var rainNow =
         rain[idxNow];
       var cloudNow =
@@ -176,7 +175,6 @@
         icon = "☁️";
       }
 
-      /* Render limpio */
       el("cond").innerHTML =
         icon +
         " · Viento " +
@@ -185,8 +183,7 @@
         ) +
         " km/h";
 
-      /* ===== Próximas horas ===== */
-
+      /* Próximas horas */
       var html = "";
 
       for (var j = 0; j < 6; j++) {
@@ -261,6 +258,79 @@
     });
   }
 
+  /* ===== CATECHISM ===== */
+
+  function loadCatechism() {
+
+    function xhrGetLocal(url, cb) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 &&
+            xhr.status === 200) {
+          try {
+            cb(JSON.parse(
+              xhr.responseText));
+          } catch (e) {
+            cb(null);
+          }
+        }
+      };
+      xhr.send();
+    }
+
+    var now = new Date();
+    var start =
+      new Date(now.getFullYear(),0,0);
+    var diff =
+      now - start;
+    var dayOfYear =
+      Math.floor(diff/86400000);
+
+    var index =
+      Math.floor(dayOfYear/3);
+
+    xhrGetLocal(
+      "data/westminster-meta.json",
+      function (meta) {
+
+      if (!meta) return;
+
+      var fileIndex =
+        index % meta.files.length;
+
+      var file =
+        "data/" +
+        meta.files[fileIndex];
+
+      xhrGetLocal(file,
+        function (block) {
+
+        if (!block ||
+            !block.items.length)
+          return;
+
+        var itemIndex =
+          index %
+          block.items.length;
+
+        var item =
+          block.items[itemIndex];
+
+        el("cate-q").innerHTML =
+          "Pregunta " +
+          item.id +
+          ": " +
+          item.q;
+
+        el("cate-a").innerHTML =
+          "“" +
+          item.a +
+          "”";
+      });
+    });
+  }
+
   /* ===== NIGHT MODE ===== */
 
   function applyNightMode() {
@@ -295,6 +365,8 @@
       loadWeather,
       C.weatherRefreshMs
     );
+
+    loadCatechism();
   }
 
   document.addEventListener(
