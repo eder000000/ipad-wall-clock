@@ -22,8 +22,8 @@
         pad(d.getSeconds());
 
       var months = [
-        "enero", "febrero", "marzo", "abril", "mayo", "junio",
-        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+        "enero","febrero","marzo","abril","mayo","junio",
+        "julio","agosto","septiembre","octubre","noviembre","diciembre"
       ];
 
       el("date").innerHTML =
@@ -58,11 +58,8 @@
     xhr.open("GET", url, true);
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4 && xhr.status === 200) {
-        try {
-          cb(JSON.parse(xhr.responseText));
-        } catch (e) {
-          cb(null);
-        }
+        try { cb(JSON.parse(xhr.responseText)); }
+        catch (e) { cb(null); }
       }
     };
     xhr.send();
@@ -94,37 +91,36 @@
 
     xhrGet(url, function (data) {
 
-      if (!data || !data.hourly) {
+      if (!data || !data.hourly || !data.current_weather) {
         el("cond").innerHTML = "Sin clima";
         return;
       }
 
-      /* Actual */
+      /* Actual temperatura */
       el("temp").innerHTML =
         Math.round(data.current_weather.temperature) + "°C";
 
-      el("cond").innerHTML =
-      iconNow + " · Viento " +
-      Math.round(data.current_weather.windspeed) +
-     " km/h";
-
-      /* Datos hourly */
+      /* Arrays */
       var times = data.hourly.time;
       var temps = data.hourly.temperature_2m;
       var rain = data.hourly.precipitation_probability;
       var clouds = data.hourly.cloudcover;
 
-            /* ===== Icono actual coherente ===== */
+      if (!times || !temps || !rain || !clouds) {
+        el("hourly").innerHTML = "Sin datos horarios";
+        return;
+      }
+
+      /* ===== Hora actual index ===== */
 
       var now = new Date();
       var currentHour = now.getHours();
-
       var currentIndex = 0;
 
       for (var i = 0; i < times.length; i++) {
 
-        var hourStr = times[i].substr(11, 2);
-        var hourNum = parseInt(hourStr, 10);
+        var hourNum =
+          parseInt(times[i].substr(11,2),10);
 
         if (hourNum === currentHour) {
           currentIndex = i;
@@ -132,11 +128,13 @@
         }
       }
 
+      /* ===== Icono actual coherente ===== */
+
       var cloudNow = clouds[currentIndex];
       var rainNow = rain[currentIndex];
-      var hourNow = currentHour;
 
-      var isDayNow = (hourNow >= 6 && hourNow < 18);
+      var isDayNow =
+        (currentHour >= 6 && currentHour < 18);
 
       var iconNow;
 
@@ -153,68 +151,37 @@
         iconNow = "☁️";
       }
 
-      if (!times || !temps || !rain) {
-        el("hourly").innerHTML = "Sin datos horarios";
-        return;
-      }
+      /* Viento + icono */
+      el("cond").innerHTML =
+        iconNow + " · Viento " +
+        Math.round(data.current_weather.windspeed) +
+        " km/h";
 
-      /* ===== Próximas horas dinámicas ===== */
+      /* ===== Próximas horas ===== */
 
       var html = "";
-      var now = new Date();
-      var currentHour = now.getHours();
+      var startIndex = currentIndex;
 
-      var startIndex = 0;
-
-      for (var k = 0; k < times.length; k++) {
-
-        var hourStr = times[k].substr(11, 2);
-        var hourNum = parseInt(hourStr, 10);
-
-        if (hourNum === currentHour) {
-          startIndex = k;
-          break;
-        }
-      }
-
-      /* Badge lluvia general */
-      var rainMax = 0;
-
-      for (var r = 0; r < 6; r++) {
-        if (rain[startIndex + r] > rainMax) {
-          rainMax = rain[startIndex + r];
-        }
-      }
-
-      if (rainMax >= 70) {
-        el("cond").innerHTML += " · 🌧️ Alta prob. lluvia";
-      } else if (rainMax >= 40) {
-        el("cond").innerHTML += " · ☁️ Posible lluvia";
-      } else {
-        el("cond").innerHTML += " · ☀️ Sin lluvia";
-      }
-
-      /* Render horas */
       for (var j = 0; j < 6; j++) {
 
         var idx = startIndex + j;
         if (!times[idx]) break;
 
         var hourNum2 =
-          parseInt(times[idx].substr(11, 2), 10);
+          parseInt(times[idx].substr(11,2),10);
 
         var hourLabel =
           (j === 0)
             ? "Ahora"
-            : times[idx].substr(11, 5);
+            : times[idx].substr(11,5);
 
         var tempVal = Math.round(temps[idx]);
         var rainVal = rain[idx];
         var cloudVal = clouds[idx];
 
-        /* ===== Iconos por nubosidad ===== */
+        var isDay =
+          (hourNum2 >= 6 && hourNum2 < 18);
 
-        var isDay = (hourNum2 >= 6 && hourNum2 < 18);
         var icon;
 
         if (rainVal >= 60) {
@@ -230,7 +197,6 @@
           icon = "☁️";
         }
 
-        /* Highlight lluvia */
         var rainBadge = "";
         var rowClass = "";
 
@@ -240,7 +206,7 @@
         }
 
         html +=
-          "<div class='hour-row " + rowClass + "'>" +
+          "<div class='hour-row "+rowClass+"'>" +
           hourLabel + " · " +
           tempVal + "°C · " +
           icon + " " +
@@ -263,40 +229,46 @@
       xhr.open("GET", url, true);
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-          try {
-            cb(JSON.parse(xhr.responseText));
-          } catch (e) {
-            cb(null);
-          }
+          try { cb(JSON.parse(xhr.responseText)); }
+          catch (e) { cb(null); }
         }
       };
       xhr.send();
     }
 
     var now = new Date();
-    var start = new Date(now.getFullYear(), 0, 0);
+    var start = new Date(now.getFullYear(),0,0);
     var diff = now - start;
-    var dayOfYear = Math.floor(diff / 86400000);
+    var dayOfYear = Math.floor(diff/86400000);
+    var index = Math.floor(dayOfYear/3);
 
-    var index = Math.floor(dayOfYear / 3);
+    xhrGetLocal("data/westminster-meta.json",
+      function (meta) {
 
-    xhrGetLocal("data/westminster-meta.json", function (meta) {
       if (!meta) return;
 
-      var fileIndex = index % meta.files.length;
-      var file = "data/" + meta.files[fileIndex];
+      var fileIndex =
+        index % meta.files.length;
 
-      xhrGetLocal(file, function (block) {
-        if (!block || !block.items || !block.items.length) return;
+      var file =
+        "data/" + meta.files[fileIndex];
 
-        var itemIndex = index % block.items.length;
-        var item = block.items[itemIndex];
+      xhrGetLocal(file,function(block){
+
+        if (!block || !block.items.length)
+          return;
+
+        var itemIndex =
+          index % block.items.length;
+
+        var item =
+          block.items[itemIndex];
 
         el("cate-q").innerHTML =
-          "Pregunta " + item.id + ": " + item.q;
+          "Pregunta "+item.id+": "+item.q;
 
         el("cate-a").innerHTML =
-          "“" + item.a + "”";
+          "“"+item.a+"”";
       });
     });
   }
@@ -306,28 +278,32 @@
   function applyNightMode() {
     var h = new Date().getHours();
 
-    if (h >= 20 || h < 6) {
-      document.body.className = "night";
-    } else {
-      document.body.className = "";
-    }
+    if (h >= 20 || h < 6)
+      document.body.className="night";
+    else
+      document.body.className="";
   }
 
   /* ===== MAIN ===== */
 
   function main() {
+
     startClock();
     startBackgrounds();
 
     applyNightMode();
-    setInterval(applyNightMode, 60000);
+    setInterval(applyNightMode,60000);
 
-    setTimeout(loadWeather, 2000);
-    setInterval(loadWeather, C.weatherRefreshMs);
+    setTimeout(loadWeather,2000);
+    setInterval(loadWeather,
+      C.weatherRefreshMs);
 
     loadCatechism();
   }
 
-  document.addEventListener("DOMContentLoaded", main);
+  document.addEventListener(
+    "DOMContentLoaded",
+    main
+  );
 
 })();
