@@ -104,13 +104,54 @@
         Math.round(data.current_weather.temperature) + "°C";
 
       el("cond").innerHTML =
-        "Viento " + Math.round(data.current_weather.windspeed) + " km/h";
+      iconNow + " · Viento " +
+      Math.round(data.current_weather.windspeed) +
+     " km/h";
 
       /* Datos hourly */
       var times = data.hourly.time;
       var temps = data.hourly.temperature_2m;
       var rain = data.hourly.precipitation_probability;
       var clouds = data.hourly.cloudcover;
+
+            /* ===== Icono actual coherente ===== */
+
+      var now = new Date();
+      var currentHour = now.getHours();
+
+      var currentIndex = 0;
+
+      for (var i = 0; i < times.length; i++) {
+
+        var hourStr = times[i].substr(11, 2);
+        var hourNum = parseInt(hourStr, 10);
+
+        if (hourNum === currentHour) {
+          currentIndex = i;
+          break;
+        }
+      }
+
+      var cloudNow = clouds[currentIndex];
+      var rainNow = rain[currentIndex];
+      var hourNow = currentHour;
+
+      var isDayNow = (hourNow >= 6 && hourNow < 18);
+
+      var iconNow;
+
+      if (rainNow >= 60) {
+        iconNow = "🌧️";
+      }
+      else if (cloudNow <= 20) {
+        iconNow = isDayNow ? "☀️" : "🌙";
+      }
+      else if (cloudNow <= 60) {
+        iconNow = "⛅";
+      }
+      else {
+        iconNow = "☁️";
+      }
 
       if (!times || !temps || !rain) {
         el("hourly").innerHTML = "Sin datos horarios";
