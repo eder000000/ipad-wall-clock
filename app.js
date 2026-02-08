@@ -149,47 +149,52 @@
       }
 
       /* Icono actual */
-      var rainNow =
-        rain[idxNow];
-      var cloudNow =
-        clouds[idxNow];
+      var rainNow = rain[idxNow];
+      var cloudNow = clouds[idxNow];
 
-      var isDay =
+      var isDayNow =
         (currentHour >= 6 &&
-         currentHour < 18);
+        currentHour < 18);
 
-      var icon;
+      var iconNow;
 
       if (rainNow >= 60) {
-        icon = "🌧️";
+        iconNow = "🌧️";
       }
       else if (cloudNow <= 20) {
-        icon = isDay
+        iconNow =
+          isDayNow
           ? "☀️"
           : "🌙";
       }
       else if (cloudNow <= 60) {
-        icon = "⛅";
+        iconNow =
+          isDayNow
+          ? "⛅"
+          : "🌙☁️";
       }
       else {
-        icon = "☁️";
+        iconNow = "☁️";
       }
 
       el("cond").innerHTML =
-        icon +
+        iconNow +
         " · Viento " +
         Math.round(
           data.current_weather.windspeed
         ) +
         " km/h";
 
-      /* Próximas horas */
+      /* ===== Próximas horas CONTINUAS ===== */
+
       var html = "";
 
+      /* Always show next 6 hours */
       for (var j = 0; j < 6; j++) {
 
-        var idx = idxNow + j;
-        if (!times[idx]) break;
+        /* Wrap across midnight */
+        var idx =
+          (idxNow + j) % times.length;
 
         var hourNum =
           parseInt(
@@ -204,31 +209,38 @@
 
         var tempVal =
           Math.round(temps[idx]);
+
         var rainVal =
           rain[idx];
+
         var cloudVal =
           clouds[idx];
 
-        var isDay2 =
+        var isDay =
           (hourNum >= 6 &&
-           hourNum < 18);
+          hourNum < 18);
 
-        var icon2;
+        /* ===== ICON LOGIC FINAL ===== */
+
+        var icon;
 
         if (rainVal >= 60) {
-          icon2 = "🌧️";
+          icon = "🌧️";
         }
         else if (cloudVal <= 20) {
-          icon2 =
-            isDay2
+          icon =
+            isDay
             ? "☀️"
             : "🌙";
         }
         else if (cloudVal <= 60) {
-          icon2 = "⛅";
+          icon =
+            isDay
+            ? "⛅"
+            : "🌙☁️";
         }
         else {
-          icon2 = "☁️";
+          icon = "☁️";
         }
 
         var rowClass =
@@ -243,7 +255,7 @@
           label + " · " +
           tempVal +
           "°C · " +
-          icon2 +
+          icon +
           " " +
           rainVal +
           "%" +
