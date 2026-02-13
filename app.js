@@ -361,6 +361,7 @@
 
     startClock();
     startBackgrounds();
+    setInterval(loadCatechism, 24 * 60 * 60 * 1000);
 
     applyNightMode();
     setInterval(
@@ -379,6 +380,12 @@
     );
 
     loadCatechism();
+
+    /* Refresh catechism daily */
+  setInterval(
+    loadCatechism,
+    24 * 60 * 60 * 1000
+  );
   }
 
   document.addEventListener(
