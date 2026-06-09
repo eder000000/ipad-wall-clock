@@ -355,9 +355,8 @@
         : "";
   }
 
-  function loadWorldCupWidget() {
-
-  xhrGet("./data/worldcup-2026-mx.json", function (data) {
+function loadWorldCupWidget() {
+  xhrGet("./data/worldcup-2026.json", function (data) {
 
     if (!data || !data.items || !data.items.length) {
       el("wc-title").innerHTML = "Sin calendario";
@@ -377,9 +376,9 @@
     for (var i = 0; i < data.items.length; i++) {
       var g = data.items[i];
 
-      if (g.date === today) {
+      if (g.date_mx === today) {
         todayGames.push(g);
-      } else if (g.date > today) {
+      } else if (g.date_mx > today) {
         nextGames.push(g);
       }
     }
@@ -413,11 +412,9 @@
         "<span class='wc-time'>" +
         game.date_mx.substr(5, 5) + " · " + game.time_mx +
         "</span><br>" +
-        game.home_flag + " " +
-        game.home +
+        game.home_flag + " " + game.home +
         " vs " +
-        game.away_flag + " " +
-        game.away +
+        game.away_flag + " " + game.away +
         "<br><span class='wc-venue'>" +
         game.venue + " · " + game.city +
         "</span>" +
@@ -453,16 +450,16 @@
     );
 
     loadCatechism();
-
     /* Refresh catechism daily */
   setInterval(
     loadCatechism,
     24 * 60 * 60 * 1000
   );
+
+    loadWorldCupWidget();
+    setInterval(loadWorldCupWidget, 6 * 60 * 60 * 1000);
   }
 
-  loadWorldCupWidget();
-  setInterval(loadWorldCupWidget, 6 * 60 * 60 * 1000);
 
   document.addEventListener(
     "DOMContentLoaded",
