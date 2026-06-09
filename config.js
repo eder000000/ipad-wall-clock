@@ -15,7 +15,7 @@ window.DASH_CONFIG = {
     "assets/bg-13.jpg",
     "assets/bg-14.jpg",
     "assets/bg-15.jpg",
-    "assets/bg-16.jpg",
+    "assets/bg-16.jpg"
   ],
 
   backgroundRotateMs: 15 * 60 * 1000, // 15 min
