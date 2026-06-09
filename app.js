@@ -245,8 +245,8 @@
     var date = new Date(y, m, d);
 
     var days = [
-      "domingo", "lunes", "martes", "miércoles",
-      "jueves", "viernes", "sábado"
+      "Domingo", "Lunes", "Martes", "Miércoles",
+      "Jueves", "Viernes", "Sábado"
     ];
 
     var months = [
