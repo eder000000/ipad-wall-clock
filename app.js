@@ -355,6 +355,79 @@
         : "";
   }
 
+  function loadWorldCupWidget() {
+
+  xhrGet("./data/worldcup-2026-mx.json", function (data) {
+
+    if (!data || !data.items || !data.items.length) {
+      el("wc-title").innerHTML = "Sin calendario";
+      el("wc-games").innerHTML = "";
+      return;
+    }
+
+    var now = new Date();
+    var today =
+      now.getFullYear() + "-" +
+      pad(now.getMonth() + 1) + "-" +
+      pad(now.getDate());
+
+    var todayGames = [];
+    var nextGames = [];
+
+    for (var i = 0; i < data.items.length; i++) {
+      var g = data.items[i];
+
+      if (g.date === today) {
+        todayGames.push(g);
+      } else if (g.date > today) {
+        nextGames.push(g);
+      }
+    }
+
+    var list;
+    var title;
+
+    if (todayGames.length > 0) {
+      list = todayGames;
+      title = "Hoy";
+    } else {
+      list = nextGames;
+      title = "Próximos partidos";
+    }
+
+    el("wc-title").innerHTML = title;
+
+    var html = "";
+    var max = list.length < 3 ? list.length : 3;
+
+    if (max === 0) {
+      el("wc-games").innerHTML = "No hay partidos próximos";
+      return;
+    }
+
+    for (var j = 0; j < max; j++) {
+      var game = list[j];
+
+      html +=
+        "<div class='wc-game'>" +
+        "<span class='wc-time'>" +
+        game.date_mx.substr(5, 5) + " · " + game.time_mx +
+        "</span><br>" +
+        game.home_flag + " " +
+        game.home +
+        " vs " +
+        game.away_flag + " " +
+        game.away +
+        "<br><span class='wc-venue'>" +
+        game.venue + " · " + game.city +
+        "</span>" +
+        "</div>";
+    }
+
+    el("wc-games").innerHTML = html;
+  });
+}
+
   /* ===== MAIN ===== */
 
   function main() {
@@ -387,6 +460,9 @@
     24 * 60 * 60 * 1000
   );
   }
+
+  loadWorldCupWidget();
+  setInterval(loadWorldCupWidget, 6 * 60 * 60 * 1000);
 
   document.addEventListener(
     "DOMContentLoaded",
