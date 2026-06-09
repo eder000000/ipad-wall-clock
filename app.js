@@ -423,6 +423,216 @@ function loadWorldCupWidget() {
 
     el("wc-games").innerHTML = html;
   });
+
+  function formatMatchDate(dateStr) {
+  var parts = dateStr.split("-");
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10) - 1;
+  var d = parseInt(parts[2], 10);
+
+  var date = new Date(y, m, d);
+
+  var days = [
+    "domingo", "lunes", "martes", "miércoles",
+    "jueves", "viernes", "sábado"
+  ];
+
+  var months = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+
+  return days[date.getDay()] + " " + d + " " + months[m];
+}
+
+function flagFromCode(code) {
+  if (!code || code.length !== 2) return code || "";
+
+  var first = code.toUpperCase().charCodeAt(0) - 65 + 127462;
+  var second = code.toUpperCase().charCodeAt(1) - 65 + 127462;
+
+  return String.fromCodePoint(first) + String.fromCodePoint(second);
+}
+
+function renderFlag(value) {
+  if (!value) return "";
+  if (/^[A-Z]{2}$/.test(value)) return flagFromCode(value);
+  return value;
+}
+
+function loadWorldCupWidget() {
+  xhrGet("./data/worldcup-2026.json", function (data) {
+
+    if (!data || !data.items || !data.items.length) {
+      el("wc-title").innerHTML = "Sin calendario";
+      el("wc-games").innerHTML = "";
+      return;
+    }
+
+    var now = new Date();
+    var today =
+      now.getFullYear() + "-" +
+      pad(now.getMonth() + 1) + "-" +
+      pad(now.getDate());
+
+    var todayGames = [];
+    var nextGames = [];
+
+    for (var i = 0; i < data.items.length; i++) {
+      var g = data.items[i];
+
+      if (g.date_mx === today) {
+        todayGames.push(g);
+      } else if (g.date_mx > today) {
+        nextGames.push(g);
+      }
+    }
+
+    var list;
+    var title;
+
+    if (todayGames.length > 0) {
+      list = todayGames;
+      title = "Hoy";
+    } else {
+      list = nextGames;
+      title = "Próximos partidos";
+    }
+
+    el("wc-title").innerHTML = title;
+
+    var html = "";
+    var max = list.length < 3 ? list.length : 3;
+
+    if (max === 0) {
+      el("wc-games").innerHTML = "No hay partidos próximos";
+      return;
+    }
+
+    for (var j = 0; j < max; j++) {
+      var game = list[j];
+
+      html +=
+        "<div class='wc-game'>" +
+        "<span class='wc-time'>" +
+        formatMatchDate(game.date_mx) + " · " + game.time_mx +
+        "</span><br>" +
+        renderFlag(game.home_flag) + " " + game.home +
+        " vs " +
+        renderFlag(game.away_flag) + " " + game.away +
+        "<br><span class='wc-venue'>" +
+        game.venue + " · " + game.city +
+        "</span>" +
+        "</div>";
+    }
+
+    el("wc-games").innerHTML = html;
+  });
+function formatMatchDate(dateStr) {
+  var parts = dateStr.split("-");
+  var y = parseInt(parts[0], 10);
+  var m = parseInt(parts[1], 10) - 1;
+  var d = parseInt(parts[2], 10);
+
+  var date = new Date(y, m, d);
+
+  var days = [
+    "domingo", "lunes", "martes", "miércoles",
+    "jueves", "viernes", "sábado"
+  ];
+
+  var months = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+
+  return days[date.getDay()] + " " + d + " " + months[m];
+}
+
+function flagFromCode(code) {
+  if (!code || code.length !== 2) return code || "";
+
+  var first = code.toUpperCase().charCodeAt(0) - 65 + 127462;
+  var second = code.toUpperCase().charCodeAt(1) - 65 + 127462;
+
+  return String.fromCodePoint(first) + String.fromCodePoint(second);
+}
+
+function renderFlag(value) {
+  if (!value) return "";
+  if (/^[A-Z]{2}$/.test(value)) return flagFromCode(value);
+  return value;
+}
+
+function loadWorldCupWidget() {
+  xhrGet("./data/worldcup-2026.json", function (data) {
+
+    if (!data || !data.items || !data.items.length) {
+      el("wc-title").innerHTML = "Sin calendario";
+      el("wc-games").innerHTML = "";
+      return;
+    }
+
+    var now = new Date();
+    var today =
+      now.getFullYear() + "-" +
+      pad(now.getMonth() + 1) + "-" +
+      pad(now.getDate());
+
+    var todayGames = [];
+    var nextGames = [];
+
+    for (var i = 0; i < data.items.length; i++) {
+      var g = data.items[i];
+
+      if (g.date_mx === today) {
+        todayGames.push(g);
+      } else if (g.date_mx > today) {
+        nextGames.push(g);
+      }
+    }
+
+    var list;
+    var title;
+
+    if (todayGames.length > 0) {
+      list = todayGames;
+      title = "Hoy";
+    } else {
+      list = nextGames;
+      title = "Próximos partidos";
+    }
+
+    el("wc-title").innerHTML = title;
+
+    var html = "";
+    var max = list.length < 3 ? list.length : 3;
+
+    if (max === 0) {
+      el("wc-games").innerHTML = "No hay partidos próximos";
+      return;
+    }
+
+    for (var j = 0; j < max; j++) {
+      var game = list[j];
+
+      html +=
+        "<div class='wc-game'>" +
+        "<span class='wc-time'>" +
+        formatMatchDate(game.date_mx) + " · " + game.time_mx +
+        "</span><br>" +
+        renderFlag(game.home_flag) + " " + game.home +
+        " vs " +
+        renderFlag(game.away_flag) + " " + game.away +
+        "<br><span class='wc-venue'>" +
+        game.venue + " · " + game.city +
+        "</span>" +
+        "</div>";
+    }
+
+    el("wc-games").innerHTML = html;
+  });
+}
 }
 
   /* ===== MAIN ===== */
@@ -457,7 +667,7 @@ function loadWorldCupWidget() {
   );
 
     loadWorldCupWidget();
-    setInterval(loadWorldCupWidget, 6 * 60 * 60 * 1000);
+    setInterval(loadWorldCupWidget, 60 * 60 * 1000);
   }
 
 
