@@ -78,8 +78,8 @@ html, body {
 
 /* Weather */
 .weather {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
@@ -108,6 +108,20 @@ html, body {
   margin-top: 10px;
   font-size: 16px;
   line-height: 1.5;
+}
+
+.hourly-card {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 700px) {
+  .weather {
+    grid-template-columns: 1fr;
+  }
+
+  .hourly-card {
+    grid-column: auto;
+  }
 }
 
 /* ===== Catecismo ===== */
@@ -204,4 +218,35 @@ body.night .cate-a {
   font-weight: 600;
 }
 
+/* ===== World Cup Widget ===== */
 
+.worldcup-card {
+  min-height: 120px;
+}
+
+.wc-title {
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.wc-games {
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+.wc-game {
+  margin-bottom: 8px;
+}
+
+.wc-time {
+  font-weight: 600;
+}
+
+.wc-venue {
+  opacity: 0.65;
+  font-size: 13px;
+}
