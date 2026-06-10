@@ -13,14 +13,10 @@ body {
 }
 
 #bg {
-  position: fixed;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  transition: background-image 2s ease;
-    filter:
-    brightness(0.70)
-    saturate(1.05);
+  filter:
+    brightness(0.76)
+    saturate(1.08)
+    contrast(1.03);
 }
 
 .wrap {
@@ -33,28 +29,24 @@ body {
 }
 
 .panel {
-  width: 92%;
-  max-width: 900px;
-
-  padding: 32px;
-
-  border-radius: 28px;
-
   background:
     linear-gradient(
       135deg,
-      rgba(255,255,255,0.06),
-      rgba(255,255,255,0.02)
+      rgba(255,255,255,0.075),
+      rgba(255,255,255,0.018)
     );
 
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.16);
 
   box-shadow:
-    0 20px 40px rgba(0,0,0,0.35);
+    0 18px 36px rgba(0,0,0,0.32),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(255,255,255,0.04);
 }
+
 
 .top {
   display: flex;
@@ -89,15 +81,8 @@ body {
 }
 
 .card {
-  padding: 18px 20px;
-
-  border-radius: 18px;
-
-  background: rgba(255,255,255,0.08);
-
-  border: 1px solid rgba(255,255,255,0.10);
-
-  min-height: 170px;
+  background: rgba(255,255,255,0.075);
+  border: 1px solid rgba(255,255,255,0.12);
 }
 
 .label {
