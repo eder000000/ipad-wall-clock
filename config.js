@@ -10,7 +10,6 @@ window.DASH_CONFIG = {
     "assets/bg-08.jpg",
     "assets/bg-09.jpg",
     "assets/bg-10.jpg",
-    "assets/bg-11.jpg",
     "assets/bg-12.jpg",
     "assets/bg-13.jpg",
     "assets/bg-14.jpg",
