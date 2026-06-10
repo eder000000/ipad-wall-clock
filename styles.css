@@ -13,6 +13,11 @@ body {
 }
 
 #bg {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: background-image 2s ease;
   filter:
     brightness(0.76)
     saturate(1.08)
@@ -29,6 +34,11 @@ body {
 }
 
 .panel {
+  width: 92%;
+  max-width: 900px;
+  padding: 32px;
+  border-radius: 28px;
+
   background:
     linear-gradient(
       135deg,
@@ -46,7 +56,6 @@ body {
     inset 0 1px 0 rgba(255,255,255,0.18),
     inset 0 -1px 0 rgba(255,255,255,0.04);
 }
-
 
 .top {
   display: flex;
@@ -81,8 +90,16 @@ body {
 }
 
 .card {
+  min-height: 170px;
+  padding: 18px 20px;
+  border-radius: 18px;
+
   background: rgba(255,255,255,0.075);
   border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 8px 20px rgba(0,0,0,0.12);
 }
 
 .label {
@@ -116,6 +133,7 @@ body {
 
 .rain-high {
   font-weight: 700;
+  color: #9fd3ff;
 }
 
 /* WORLD CUP */
@@ -179,13 +197,28 @@ body {
 /* NIGHT MODE */
 
 body.night #bg {
-  filter: brightness(0.42) saturate(0.85);
+  filter:
+    brightness(0.46)
+    saturate(0.9)
+    contrast(1.02);
+}
+
+body.night .panel {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.055),
+      rgba(255,255,255,0.014)
+    );
+}
+
+body.night .card {
+  background: rgba(255,255,255,0.065);
 }
 
 /* FUTURE MOBILE SUPPORT */
 
 @media (max-width: 700px) {
-
   .weather {
     grid-template-columns: 1fr;
   }
@@ -196,5 +229,9 @@ body.night #bg {
 
   .date {
     font-size: 18px;
+  }
+
+  .card {
+    min-height: auto;
   }
 }
