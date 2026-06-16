@@ -11,8 +11,6 @@
 
   var C = window.DASH_CONFIG;
 
-  /* ===== CLOCK ===== */
-
   function pad(n) {
     return n < 10 ? "0" + n : n;
   }
@@ -21,31 +19,19 @@
     function tick() {
       var d = new Date();
 
-      setHtml(
-        "time",
-        pad(d.getHours()) + ":" +
-        pad(d.getMinutes()) + ":" +
-        pad(d.getSeconds())
-      );
+      setHtml("time", pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()));
 
       var months = [
         "enero", "febrero", "marzo", "abril", "mayo", "junio",
         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
       ];
 
-      setHtml(
-        "date",
-        d.getDate() + " de " +
-        months[d.getMonth()] + " de " +
-        d.getFullYear()
-      );
+      setHtml("date", d.getDate() + " de " + months[d.getMonth()] + " de " + d.getFullYear());
     }
 
     tick();
     setInterval(tick, 1000);
   }
-
-  /* ===== BACKGROUND ===== */
 
   function startBackgrounds() {
     var bg = el("bg");
@@ -61,8 +47,6 @@
     change();
     setInterval(change, C.backgroundRotateMs);
   }
-
-  /* ===== XHR ===== */
 
   function xhrGet(url, cb) {
     var xhr = new XMLHttpRequest();
@@ -88,8 +72,6 @@
 
     xhr.send();
   }
-
-  /* ===== WEATHER ===== */
 
   function getWeatherIcon(rainVal, cloudVal, hourNum) {
     var isDay = hourNum >= 6 && hourNum < 18;
@@ -144,7 +126,6 @@
 
       for (var i = 0; i < times.length; i++) {
         var h = parseInt(times[i].substr(11, 2), 10);
-
         if (h === currentHour) {
           idxNow = i;
           break;
@@ -155,17 +136,11 @@
       var cloudNow = clouds[idxNow];
       var iconNow = getWeatherIcon(rainNow, cloudNow, currentHour);
 
-      setHtml(
-        "temp",
-        Math.round(data.current_weather.temperature) + "°C"
-      );
+      setHtml("temp", Math.round(data.current_weather.temperature) + "°C");
 
       setHtml(
         "cond",
-        iconNow +
-        " · Viento " +
-        Math.round(data.current_weather.windspeed) +
-        " km/h"
+        iconNow + " · Viento " + Math.round(data.current_weather.windspeed) + " km/h"
       );
 
       var html = "";
@@ -198,8 +173,6 @@
     });
   }
 
-  /* ===== CATECHISM ===== */
-
   function loadCatechism() {
     var now = new Date();
     var start = new Date(now.getFullYear(), 0, 0);
@@ -219,20 +192,11 @@
         var itemIndex = index % block.items.length;
         var item = block.items[itemIndex];
 
-        setHtml(
-          "cate-q",
-          "Pregunta " + item.id + ": " + item.q
-        );
-
-        setHtml(
-          "cate-a",
-          "“" + item.a + "”"
-        );
+        setHtml("cate-q", "Pregunta " + item.id + ": " + item.q);
+        setHtml("cate-a", "“" + item.a + "”");
       });
     });
   }
-
-  /* ===== WORLD CUP ===== */
 
   function formatMatchDate(dateStr) {
     if (!dateStr) return "";
@@ -257,10 +221,25 @@
     return days[date.getDay()] + " " + d + " " + months[m];
   }
 
+  function parseGameDateTime(game) {
+    var date = game.date_mx || game.date;
+    var time = game.time_mx || game.time || "00:00";
+
+    var p = date.split("-");
+    var t = time.split(":");
+
+    return new Date(
+      parseInt(p[0], 10),
+      parseInt(p[1], 10) - 1,
+      parseInt(p[2], 10),
+      parseInt(t[0], 10),
+      parseInt(t[1], 10),
+      0
+    );
+  }
+
   function flagFromCode(code) {
-    if (!code || code.length !== 2 || !String.fromCodePoint) {
-      return code || "";
-    }
+    if (!code || code.length !== 2 || !String.fromCodePoint) return code || "";
 
     code = code.toUpperCase();
 
@@ -292,41 +271,20 @@
       }
 
       var now = new Date();
-
-      var today =
-        now.getFullYear() + "-" +
-        pad(now.getMonth() + 1) + "-" +
-        pad(now.getDate());
-
-      var todayGames = [];
-      var nextGames = [];
+      var upcoming = [];
 
       for (var i = 0; i < data.items.length; i++) {
-        var g = data.items[i];
-        var gameDate = g.date_mx || g.date;
+        var gameDateTime = parseGameDateTime(data.items[i]);
 
-        if (gameDate === today) {
-          todayGames.push(g);
-        } else if (gameDate > today) {
-          nextGames.push(g);
+        if (gameDateTime >= now) {
+          upcoming.push(data.items[i]);
         }
       }
 
-      var list;
-      var title;
-
-      if (todayGames.length > 0) {
-        list = todayGames;
-        title = "Hoy";
-      } else {
-        list = nextGames;
-        title = "Próximos partidos";
-      }
-
-      setHtml("wc-title", title);
+      setHtml("wc-title", "Próximos partidos");
 
       var html = "";
-      var max = list.length < 4 ? list.length : 4;
+      var max = upcoming.length < 4 ? upcoming.length : 4;
 
       if (max === 0) {
         setHtml("wc-games", "No hay partidos próximos");
@@ -334,7 +292,7 @@
       }
 
       for (var j = 0; j < max; j++) {
-        var game = list[j];
+        var game = upcoming[j];
 
         var date = game.date_mx || game.date;
         var time = game.time_mx || game.time || "";
@@ -359,8 +317,6 @@
     });
   }
 
-  /* ===== NIGHT MODE ===== */
-
   function applyNightMode() {
     var h = new Date().getHours();
 
@@ -369,8 +325,6 @@
         ? "night"
         : "";
   }
-
-  /* ===== MAIN ===== */
 
   function main() {
     startClock();
