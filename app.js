@@ -326,7 +326,7 @@
       setHtml("wc-title", title);
 
       var html = "";
-      var max = list.length < 3 ? list.length : 3;
+      var max = list.length < 4 ? list.length : 4;
 
       if (max === 0) {
         setHtml("wc-games", "No hay partidos próximos");
