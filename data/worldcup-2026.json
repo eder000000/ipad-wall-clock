@@ -1328,7 +1328,7 @@
       "city": "Kansas City",
       "stage": "Cuartos de final"
     },
-   {
+    {
       "id": 101,
       "date_mx": "2026-07-14",
       "time_mx": "13:00",
@@ -1340,12 +1340,15 @@
       "away_flag": "ES",
       "venue": "AT&T Stadium",
       "city": "Arlington",
-      "stage": "Semifinal"
+      "stage": "Semifinal",
+      "status": "Finalizado",
+      "home_score": 0,
+      "away_score": 2
     },
     {
       "id": 102,
       "date_mx": "2026-07-15",
-      "time_mx": "15:00",
+      "time_mx": "13:00",
       "home": "Inglaterra",
       "home_code": "GB",
       "home_flag": "GB",
@@ -1354,35 +1357,40 @@
       "away_flag": "AR",
       "venue": "Mercedes-Benz Stadium",
       "city": "Atlanta",
-      "stage": "Semifinal"
+      "stage": "Semifinal",
+      "status": "Finalizado",
+      "home_score": 1,
+      "away_score": 2
     },
     {
       "id": 103,
       "date_mx": "2026-07-18",
-      "time_mx": "14:00",
-      "home": "Perdedor SF1",
-      "home_code": "",
-      "home_flag": "🥉",
-      "away": "Perdedor SF2",
-      "away_code": "",
-      "away_flag": "🥉",
+      "time_mx": "15:00",
+      "home": "Francia",
+      "home_code": "FR",
+      "home_flag": "FR",
+      "away": "Inglaterra",
+      "away_code": "GB",
+      "away_flag": "GB",
       "venue": "Hard Rock Stadium",
       "city": "Miami",
-      "stage": "Tercer lugar"
+      "stage": "Tercer lugar",
+      "status": "Programado"
     },
     {
       "id": 104,
       "date_mx": "2026-07-19",
       "time_mx": "13:00",
-      "home": "Ganador SF1",
-      "home_code": "",
-      "home_flag": "🏆",
-      "away": "Ganador SF2",
-      "away_code": "",
-      "away_flag": "🏆",
+      "home": "España",
+      "home_code": "ES",
+      "home_flag": "ES",
+      "away": "Argentina",
+      "away_code": "AR",
+      "away_flag": "AR",
       "venue": "MetLife Stadium",
       "city": "New York / New Jersey",
-      "stage": "Final"
-    }
+      "stage": "Final",
+      "status": "Programado"
+}
   ]
 }
