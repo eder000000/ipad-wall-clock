@@ -198,122 +198,234 @@
     });
   }
 
-  function formatMatchDate(dateStr) {
-    if (!dateStr) return "";
-
-    var parts = dateStr.split("-");
-    var y = parseInt(parts[0], 10);
-    var m = parseInt(parts[1], 10) - 1;
-    var d = parseInt(parts[2], 10);
-
-    var date = new Date(y, m, d);
-
-    var days = [
-      "Domingo", "Lunes", "Martes", "Miércoles",
-      "Jueves", "Viernes", "Sábado"
-    ];
-
-    var months = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ];
-
-    return days[date.getDay()] + " " + d + " " + months[m];
+  function escapeHtml(value) {
+    return String(value === null || typeof value === "undefined" ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
-  function parseGameDateTime(game) {
-    var date = game.date_mx || game.date;
-    var time = game.time_mx || game.time || "00:00";
+  function normalizeCategory(value) {
+    return String(value || "general")
+      .toLowerCase()
+      .replace(/[áàäâ]/g, "a")
+      .replace(/[éèëê]/g, "e")
+      .replace(/[íìïî]/g, "i")
+      .replace(/[óòöô]/g, "o")
+      .replace(/[úùüû]/g, "u")
+      .replace(/ñ/g, "n")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "general";
+  }
 
-    var p = date.split("-");
-    var t = time.split(":");
+  function parseLocalDate(dateString, timeString) {
+    var dateParts = String(dateString || "").split("-");
+    var timeParts = String(timeString || "00:00").split(":");
+
+    if (dateParts.length !== 3) return null;
 
     return new Date(
-      parseInt(p[0], 10),
-      parseInt(p[1], 10) - 1,
-      parseInt(p[2], 10),
-      parseInt(t[0], 10),
-      parseInt(t[1], 10),
+      parseInt(dateParts[0], 10),
+      parseInt(dateParts[1], 10) - 1,
+      parseInt(dateParts[2], 10),
+      parseInt(timeParts[0], 10) || 0,
+      parseInt(timeParts[1], 10) || 0,
       0
     );
   }
 
-  function flagFromCode(code) {
-    if (!code || code.length !== 2 || !String.fromCodePoint) return code || "";
-
-    code = code.toUpperCase();
-
-    var first = code.charCodeAt(0) - 65 + 127462;
-    var second = code.charCodeAt(1) - 65 + 127462;
-
-    return String.fromCodePoint(first) + String.fromCodePoint(second);
+  function dateKey(date) {
+    return date.getFullYear() + "-" +
+      pad(date.getMonth() + 1) + "-" +
+      pad(date.getDate());
   }
 
-  function renderFlag(value) {
-    if (!value) return "";
+  function normalizeEventsPayload(payload) {
+    var source = payload && payload.events ? payload.events : [];
+    var events = [];
 
-    var clean = String(value).toUpperCase();
+    for (var i = 0; i < source.length; i++) {
+      var raw = source[i] || {};
+      var activeValue =
+        typeof raw.active === "undefined" ? raw.activo : raw.active;
+      var inactive =
+        activeValue === false ||
+        String(activeValue).toLowerCase() === "no" ||
+        String(activeValue).toLowerCase() === "false" ||
+        String(activeValue) === "0";
+      var event = {
+        id: raw.id || "event-" + i,
+        date: String(raw.date || raw.fecha || "").substr(0, 10),
+        time: String(raw.time || raw.hora || "").substr(0, 5),
+        title: raw.title || raw.titulo || "Evento",
+        category: raw.category || raw.categoria || "General"
+      };
 
-    if (/^[A-Z]{2}$/.test(clean)) {
-      return flagFromCode(clean);
+      if (!inactive && event.date && event.title) events.push(event);
     }
 
-    return value;
+    events.sort(function (left, right) {
+      return parseLocalDate(left.date, left.time).getTime() -
+        parseLocalDate(right.date, right.time).getTime();
+    });
+
+    return {
+      updatedAt: payload && payload.updatedAt ? payload.updatedAt : "",
+      events: events
+    };
   }
 
-  function loadWorldCupWidget() {
-    xhrGet("./data/worldcup-2026.json", function (data) {
+  function saveEventsCache(payload) {
+    try {
+      window.localStorage.setItem(
+        C.eventsCacheKey || "ipadWallClockEventsV1",
+        JSON.stringify(payload)
+      );
+    } catch (e) {
+      /* localStorage may be unavailable in private browsing. */
+    }
+  }
 
-      if (!data || !data.items || !data.items.length) {
-        setHtml("wc-title", "Sin calendario");
-        setHtml("wc-games", "");
-        return;
-      }
+  function readEventsCache() {
+    try {
+      var value = window.localStorage.getItem(
+        C.eventsCacheKey || "ipadWallClockEventsV1"
+      );
+      return value ? JSON.parse(value) : null;
+    } catch (e) {
+      return null;
+    }
+  }
 
-      var now = new Date();
-      var upcoming = [];
+  function renderCalendar(payload, status) {
+    var now = new Date();
+    var events = payload.events || [];
+    var eventsByDate = {};
+    var year = now.getFullYear();
+    var month = now.getMonth();
+    var firstDay = new Date(year, month, 1);
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var offset = (firstDay.getDay() + 6) % 7;
+    var months = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+    var days = [
+      "Domingo", "Lunes", "Martes", "Miércoles",
+      "Jueves", "Viernes", "Sábado"
+    ];
+    var html = "";
+    var i;
 
-      for (var i = 0; i < data.items.length; i++) {
-        var gameDateTime = parseGameDateTime(data.items[i]);
+    for (i = 0; i < events.length; i++) {
+      eventsByDate[events[i].date] = true;
+    }
 
-        if (gameDateTime >= now) {
-          upcoming.push(data.items[i]);
-        }
-      }
+    setHtml("calendar-month", months[month] + " " + year);
 
-      setHtml("wc-title", "Próximos partidos");
+    for (i = 0; i < offset; i++) {
+      html += '<div class="calendar-day empty">0</div>';
+    }
 
-      var html = "";
-      var max = upcoming.length < 4 ? upcoming.length : 4;
+    for (i = 1; i <= daysInMonth; i++) {
+      var key = year + "-" + pad(month + 1) + "-" + pad(i);
+      var className = "calendar-day";
+      if (key === dateKey(now)) className += " today";
+      if (eventsByDate[key]) className += " has-event";
+      html += '<div class="' + className + '">' + i + "</div>";
+    }
 
-      if (max === 0) {
-        setHtml("wc-games", "No hay partidos próximos");
-        return;
-      }
+    setHtml("calendar-grid", html);
 
-      for (var j = 0; j < max; j++) {
-        var game = upcoming[j];
+    html = "";
+    var beginningOfToday = new Date(year, month, now.getDate());
+    var shown = 0;
+    var max = C.maxUpcomingEvents || 3;
 
-        var date = game.date_mx || game.date;
-        var time = game.time_mx || game.time || "";
-        var homeFlag = renderFlag(game.home_flag || game.home_code);
-        var awayFlag = renderFlag(game.away_flag || game.away_code);
+    for (i = 0; i < events.length && shown < max; i++) {
+      var eventDate = parseLocalDate(events[i].date, events[i].time);
+
+      if (eventDate && eventDate >= beginningOfToday) {
+        var label = days[eventDate.getDay()] + " " +
+          eventDate.getDate() + " " + months[eventDate.getMonth()];
+        if (events[i].time) label += " · " + events[i].time;
 
         html +=
-          "<div class='wc-game'>" +
-          "<span class='wc-time'>" +
-          formatMatchDate(date) + " · " + time +
-          "</span><br>" +
-          homeFlag + " " + game.home +
-          " vs " +
-          awayFlag + " " + game.away +
-          "<br><span class='wc-venue'>" +
-          game.venue + " · " + game.city +
-          "</span>" +
-          "</div>";
+          '<div class="calendar-event category-' +
+          escapeHtml(normalizeCategory(events[i].category)) + '">' +
+          '<span class="event-dot"></span>' +
+          '<div><div class="event-title">' +
+          escapeHtml(events[i].title) +
+          '</div><div class="event-meta">' +
+          escapeHtml(label) +
+          "</div></div></div>";
+        shown++;
+      }
+    }
+
+    setHtml(
+      "calendar-events",
+      html || '<div class="calendar-empty">No hay eventos próximos</div>'
+    );
+    setHtml("calendar-status", escapeHtml(status));
+  }
+
+  function loadCalendarFallback(status) {
+    var fallbackUrl = C.eventsFallbackUrl || "./data/events-fallback.json";
+    var separator = fallbackUrl.indexOf("?") === -1 ? "?" : "&";
+
+    xhrGet(fallbackUrl + separator + "_=" + new Date().getTime(), function (data) {
+      if (data && data.events) {
+        var normalized = normalizeEventsPayload(data);
+        saveEventsCache(normalized);
+        renderCalendar(normalized, status);
+        return;
       }
 
-      setHtml("wc-games", html);
+      var cached = readEventsCache();
+      if (cached && cached.events) {
+        renderCalendar(
+          normalizeEventsPayload(cached),
+          "Mostrando la última agenda guardada"
+        );
+        return;
+      }
+
+      renderCalendar({ events: [] }, "No se pudo cargar la agenda");
+    });
+  }
+
+  function loadCalendar() {
+    var remoteUrl = String(C.eventsUrl || "").replace(/^\s+|\s+$/g, "");
+    setHtml("calendar-status", "Actualizando agenda…");
+
+    if (!remoteUrl) {
+      loadCalendarFallback("Agenda local");
+      return;
+    }
+
+    var separator = remoteUrl.indexOf("?") === -1 ? "?" : "&";
+
+    xhrGet(remoteUrl + separator + "_=" + new Date().getTime(), function (data) {
+      if (data && data.events) {
+        var normalized = normalizeEventsPayload(data);
+        saveEventsCache(normalized);
+        renderCalendar(normalized, "Agenda actualizada");
+        return;
+      }
+
+      var cached = readEventsCache();
+      if (cached && cached.events) {
+        renderCalendar(
+          normalizeEventsPayload(cached),
+          "Mostrando la última agenda guardada"
+        );
+        return;
+      }
+
+      loadCalendarFallback("Agenda de respaldo");
     });
   }
 
@@ -339,8 +451,8 @@
     loadCatechism();
     setInterval(loadCatechism, 24 * 60 * 60 * 1000);
 
-    loadWorldCupWidget();
-    setInterval(loadWorldCupWidget, 60 * 60 * 1000);
+    loadCalendar();
+    setInterval(loadCalendar, C.eventsRefreshMs || (15 * 60 * 1000));
   }
 
   document.addEventListener("DOMContentLoaded", main);

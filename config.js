@@ -18,5 +18,15 @@ window.DASH_CONFIG = {
   ],
 
   backgroundRotateMs: 15 * 60 * 1000, // 15 min
-  weatherRefreshMs: 10 * 60 * 1000    // 10 min
+  weatherRefreshMs: 10 * 60 * 1000,   // 10 min
+
+  /*
+   * Pega aquí la URL /exec de Google Apps Script.
+   * Mientras esté vacía se usa el archivo local de respaldo.
+   */
+  eventsUrl: "",
+  eventsRefreshMs: 15 * 60 * 1000,
+  eventsFallbackUrl: "./data/events-fallback.json",
+  eventsCacheKey: "ipadWallClockEventsV1",
+  maxUpcomingEvents: 3
 };
