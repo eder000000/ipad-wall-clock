@@ -24,7 +24,7 @@ window.DASH_CONFIG = {
    * Pega aquí la URL /exec de Google Apps Script.
    * Mientras esté vacía se usa el archivo local de respaldo.
    */
-  eventsUrl: "",
+  eventsUrl: "https://script.google.com/macros/s/AKfycbzW1cGZCcGYc4JFQl9H5E9hxSO4wY-i-qpgjFXTtj7i_c0OTGGuqBc3cpiqOTIzbEJJ/exec",
   eventsRefreshMs: 15 * 60 * 1000,
   eventsFallbackUrl: "./data/events-fallback.json",
   eventsCacheKey: "ipadWallClockEventsV1",
